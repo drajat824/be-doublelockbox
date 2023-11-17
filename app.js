@@ -1,21 +1,22 @@
 const mqtt = require("mqtt");
 const mqttTopic = "notification-topic";
 const OneSignal = require("onesignal-node");
+
 const express = require("express");
+const { Router } = require("express");
 
-const app = express();
-const port = 3000;
+export async function handler(event, context) {
+  const app = express();
+  const router = Router();
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+  // Middleware untuk menampilkan "Hello" ketika diakses
+  app.get("/hello", (req, res) => {
+    res.send("Server Berjalan!");
+  });
 
-// Middleware untuk menampilkan "Hello" ketika diakses
-app.get("/", (req, res) => {
-  res.send("Server Berjalan!");
-});
+  app.use("/api/", router);
 
-const rootCa = `
+  const rootCa = `
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
 TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
@@ -49,73 +50,76 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 -----END CERTIFICATE-----
 `;
 
-const options = {
-  protocol: "mqtts",
-  host: "395d0f154c95495889ba0205f5623f66.s1.eu.hivemq.cloud",
-  port: 8883,
-  ca: [rootCa],
-  username: "notif",
-  password: "Notif123@",
-};
+  const options = {
+    protocol: "mqtts",
+    host: "395d0f154c95495889ba0205f5623f66.s1.eu.hivemq.cloud",
+    port: 8883,
+    ca: [rootCa],
+    username: "notif",
+    password: "Notif123@",
+  };
 
-async function connectToMqtt() {
-  return new Promise((resolve, reject) => {
-    const mqttClient = mqtt.connect(options);
+  async function connectToMqtt() {
+    return new Promise((resolve, reject) => {
+      const mqttClient = mqtt.connect(options);
 
-    // Ketika koneksi MQTT terhubung
-    mqttClient.on("connect", () => {
-      console.log("MQTT connected");
+      // Ketika koneksi MQTT terhubung
+      mqttClient.on("connect", () => {
+        console.log("MQTT connected");
 
-      // Subscribe ke topik MQTT
-      mqttClient.subscribe(mqttTopic);
+        // Subscribe ke topik MQTT
+        mqttClient.subscribe(mqttTopic);
 
-      // Resolusi Promise jika terhubung berhasil
-      resolve("MQTT connected");
+        // Resolusi Promise jika terhubung berhasil
+        resolve("MQTT connected");
+      });
+
+      // Ketika menerima pesan di topik MQTT
+      mqttClient.on("message", (topic, message, packet) => {
+        // console.log(packet.payload.toString());
+
+        const client = new OneSignal.Client(
+          "49b0050a-99f4-4842-ba5b-db1b516fb6cb",
+          "MzBlZGFkNTUtM2IyZS00ODA1LTg2N2MtZDZlNzVlNjc1MzAy"
+        );
+
+        const notification = {
+          contents: {
+            tr: "Yeni bildirim",
+            en: "Peringatan! Brankas dalam keadaan mencurigakan!",
+          },
+          included_segments: ["double-lock-box"],
+        };
+
+        client
+          .createNotification(notification)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+      });
+
+      // Tangani kesalahan koneksi
+      mqttClient.on("error", (error) => {
+        console.error("MQTT connection error:", error);
+        // Tolak Promise jika terjadi kesalahan
+        reject(error);
+      });
+    });
+  }
+
+  // Contoh penggunaan
+  connectToMqtt()
+    .then((response) => {
+      console.log(response);
+      // Lakukan tindakan tambahan setelah koneksi berhasil
+    })
+    .catch((error) => {
+      console.error("Failed to connect to MQTT:", error);
+      // Lakukan tindakan tambahan jika koneksi gagal
     });
 
-    // Ketika menerima pesan di topik MQTT
-    mqttClient.on("message", (topic, message, packet) => {
-      // console.log(packet.payload.toString());
-
-      const client = new OneSignal.Client(
-        "49b0050a-99f4-4842-ba5b-db1b516fb6cb",
-        "MzBlZGFkNTUtM2IyZS00ODA1LTg2N2MtZDZlNzVlNjc1MzAy"
-      );
-
-      const notification = {
-        contents: {
-          tr: "Yeni bildirim",
-          en: "Peringatan! Brankas dalam keadaan mencurigakan!",
-        },
-        included_segments: ["double-lock-box"],
-      };
-
-      client
-        .createNotification(notification)
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    });
-
-    // Tangani kesalahan koneksi
-    mqttClient.on("error", (error) => {
-      console.error("MQTT connection error:", error);
-      // Tolak Promise jika terjadi kesalahan
-      reject(error);
-    });
-  });
+  return serverless(app)(event, context);
 }
-
-// Contoh penggunaan
-connectToMqtt()
-  .then((response) => {
-    console.log(response);
-    // Lakukan tindakan tambahan setelah koneksi berhasil
-  })
-  .catch((error) => {
-    console.error("Failed to connect to MQTT:", error);
-    // Lakukan tindakan tambahan jika koneksi gagal
-  });
