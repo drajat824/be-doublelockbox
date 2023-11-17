@@ -11,9 +11,7 @@ const app = express();
 const router = Router();
 
 router.get("/", (req, res) => {
-  res.json({
-    hello: "hi!",
-  });
+  console.log('tes')
 });
 
 app.use(`/.netlify/functions/api`, router);
