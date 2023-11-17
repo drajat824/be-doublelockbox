@@ -2,6 +2,8 @@ const mqtt = require("mqtt");
 const mqttTopic = "notification-topic";
 const OneSignal = require("onesignal-node");
 
+const serverless = require("serverless-http");
+
 const express = require("express");
 const { Router } = require("express");
 
