@@ -2,24 +2,6 @@ const mqtt = require("mqtt");
 const mqttTopic = "notification-topic";
 const OneSignal = require("onesignal-node");
 
-const serverless = require("serverless-http");
-
-const express = require("express");
-const { Router } = require("express");
-
-const app = express();
-const router = Router();
-
-router.get("/", (req, res) => {
-  console.log('tes')
-});
-
-app.use(`/.netlify/functions/api`, router);
-
-app.listen(8000, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
 const rootCa = `
 -----BEGIN CERTIFICATE-----
 MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
@@ -56,11 +38,11 @@ emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
 
 const options = {
   protocol: "mqtts",
-  host: "395d0f154c95495889ba0205f5623f66.s1.eu.hivemq.cloud",
+  host: "cbaf6706df604b55adafeef2e822ffa6.s1.eu.hivemq.cloud",
   port: 8883,
   ca: [rootCa],
-  username: "notif",
-  password: "Notif123@",
+  username: "Notif123",
+  password: "Notif1234@",
 };
 
 async function connectToMqtt() {
@@ -124,6 +106,3 @@ connectToMqtt()
     console.error("Failed to connect to MQTT:", error);
     // Lakukan tindakan tambahan jika koneksi gagal
   });
-
-module.exports = app;
-module.exports.handler = serverless(app);
