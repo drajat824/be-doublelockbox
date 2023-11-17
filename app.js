@@ -1,6 +1,19 @@
 const mqtt = require("mqtt");
 const mqttTopic = "notification-topic";
-const OneSignal = require('onesignal-node');   
+const OneSignal = require("onesignal-node");
+const express = require("express");
+
+const app = express();
+const port = 3000;
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
+// Middleware untuk menampilkan "Hello" ketika diakses
+app.get("/", (req, res) => {
+  res.send("Server Berjalan!");
+});
 
 const rootCa = `
 -----BEGIN CERTIFICATE-----
@@ -74,7 +87,7 @@ async function connectToMqtt() {
           tr: "Yeni bildirim",
           en: "Peringatan! Brankas dalam keadaan mencurigakan!",
         },
-        included_segments: ['double-lock-box'],
+        included_segments: ["double-lock-box"],
       };
 
       client
