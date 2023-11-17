@@ -14,11 +14,11 @@ router.get("/", (req, res) => {
   console.log('tes')
 });
 
+app.use(`/.netlify/functions/api`, router);
+
 app.listen(8000, () => {
   console.log(`Server is running on port ${port}`);
 });
-
-app.use(`/.netlify/functions/api`, router);
 
 const rootCa = `
 -----BEGIN CERTIFICATE-----
